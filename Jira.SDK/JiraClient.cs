@@ -12,6 +12,7 @@ using System.Reflection;
 using Jira.SDK.Tools;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using RestSharp.Authenticators;
 
 namespace Jira.SDK
 {
@@ -132,6 +133,15 @@ namespace Jira.SDK
         {
             return GetList<User>(JiraObjectEnum.AssignableUser,
                                parameters: new Dictionary<string, string>() { { "project", projectKey } });
+        }
+
+        public IRestResponse<User> AddUser(User user)
+        {
+            IRestRequest request = new RestRequest(String.Format("{0}/user", JiraAPIServiceURI), Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddBody(user);
+            IRestResponse<User> response = Client.Post<User>(request);
+            return response;
         }
         #endregion
 
