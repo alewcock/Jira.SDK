@@ -44,12 +44,17 @@ namespace Jira.SDK.Domain
 
         public void SetCustomFieldValue(String customFieldName, String value)
         {
-            String fieldId = GetJira().Fields.First(field => field.Name.Equals(customFieldName)).ID;
-            if (Fields.CustomFields[fieldId] == null)
+            Field field = GetJira().Fields.FirstOrDefault(f => f.Name.Equals(customFieldName));
+            if (field == null)
             {
-                Fields.CustomFields[fieldId] = new CustomField(value);
+                throw new ArgumentException(String.Format("The field with name {0} does not exist.", customFieldName), customFieldName);
             }
-            Fields.CustomFields[fieldId].Value = value;
+
+            if (Fields.CustomFields[field.ID] == null)
+            {
+                Fields.CustomFields[field.ID] = new CustomField(value);
+            }
+            Fields.CustomFields[field.ID].Value = value;
         }
 
         public String Key { get; set; }
@@ -605,15 +610,18 @@ namespace Jira.SDK.Domain
             {
                 switch (fieldsObj[customFieldName].Type)
                 {
-                    case JTokenType.String:
-                        CustomFields.Add(customFieldName, new CustomField((String)fieldsObj[customFieldName]));
-                        break;
                     case JTokenType.Object:
                         CustomFields.Add(customFieldName, ((JObject)fieldsObj[customFieldName]).ToObject<CustomField>());
                         break;
                     case JTokenType.Null:
-                    default:
                         CustomFields.Add(customFieldName, null);
+                        break;
+                    case JTokenType.Array:
+                        // TODO Handle Array Type
+                        CustomFields.Add(customFieldName, null);
+                        break;
+                    default:
+                        CustomFields.Add(customFieldName, new CustomField((String)fieldsObj[customFieldName]));
                         break;
                 }
 
